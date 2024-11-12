@@ -90,7 +90,9 @@ func NewContainerNodePoolRef(ctx context.Context, reader client.Reader, obj *Con
 	id := &ContainerNodePoolRef{}
 
 	// Get Parent
-	projectRef, err := refsv1beta1.ResolveProject(ctx, reader, obj, obj.Spec.ProjectRef)
+	// projectRef, err := refsv1beta1.ResolveProject(ctx, reader, obj, obj.Spec.ProjectRef)
+	// obj.Spec.ProjectRef is not a field.
+	projectRef, err := refsv1beta1.ResolveProject(ctx, reader, obj, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +113,10 @@ func NewContainerNodePoolRef(ctx context.Context, reader client.Reader, obj *Con
 	}
 
 	// Use approved External
+	/* NOTYET: Not adding any new fields during resource migration
 	externalRef := valueOf(obj.Status.ExternalRef)
+	*/
+	var externalRef string
 	if externalRef == "" {
 		id.External = asContainerNodePoolExternal(id.parent, resourceID)
 		return id, nil

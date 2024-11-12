@@ -85,6 +85,7 @@ autoscaling:
   totalMinNodeCount: integer
 clusterRef:
   external: string
+  kind: string
   name: string
   namespace: string
 initialNodeCount: integer
@@ -98,10 +99,12 @@ networkConfig:
   additionalNodeNetworkConfigs:
   - networkRef:
       external: string
+      kind: string
       name: string
       namespace: string
     subnetworkRef:
       external: string
+      kind: string
       name: string
       namespace: string
   additionalPodNetworkConfigs:
@@ -109,6 +112,7 @@ networkConfig:
     secondaryPodRange: string
     subnetworkRef:
       external: string
+      kind: string
       name: string
       namespace: string
   createPodRange: boolean
@@ -122,6 +126,7 @@ nodeConfig:
     threadsPerCore: integer
   bootDiskKMSCryptoKeyRef:
     external: string
+    kind: string
     name: string
     namespace: string
   confidentialNodes:
@@ -171,6 +176,7 @@ nodeConfig:
   minCpuPlatform: string
   nodeGroupRef:
     external: string
+    kind: string
     name: string
     namespace: string
   oauthScopes:
@@ -187,6 +193,7 @@ nodeConfig:
     sandboxType: string
   serviceAccountRef:
     external: string
+    kind: string
     name: string
     namespace: string
   shieldedInstanceConfig:
@@ -214,6 +221,7 @@ nodeLocations:
 placementPolicy:
   policyNameRef:
     external: string
+    kind: string
     name: string
     namespace: string
   tpuTopology: string
@@ -316,7 +324,17 @@ version: string
         </td>
         <td>
             <p><code class="apitype">string</code></p>
-            <p>{% verbatim %}Allowed value: The `name` field of a `ContainerCluster` resource.{% endverbatim %}</p>
+            <p>{% verbatim %}The external name of the referenced resource{% endverbatim %}</p>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <p><code>clusterRef.kind</code></p>
+            <p><i>Optional</i></p>
+        </td>
+        <td>
+            <p><code class="apitype">string</code></p>
+            <p>{% verbatim %}Kind of the referent.{% endverbatim %}</p>
         </td>
     </tr>
     <tr>
@@ -456,7 +474,17 @@ version: string
         </td>
         <td>
             <p><code class="apitype">string</code></p>
-            <p>{% verbatim %}Allowed value: The `selfLink` field of a `ComputeNetwork` resource.{% endverbatim %}</p>
+            <p>{% verbatim %}The external name of the referenced resource{% endverbatim %}</p>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <p><code>networkConfig.additionalNodeNetworkConfigs[].networkRef.kind</code></p>
+            <p><i>Optional</i></p>
+        </td>
+        <td>
+            <p><code class="apitype">string</code></p>
+            <p>{% verbatim %}Kind of the referent.{% endverbatim %}</p>
         </td>
     </tr>
     <tr>
@@ -496,7 +524,17 @@ version: string
         </td>
         <td>
             <p><code class="apitype">string</code></p>
-            <p>{% verbatim %}Allowed value: The `selfLink` field of a `ComputeSubnetwork` resource.{% endverbatim %}</p>
+            <p>{% verbatim %}The external name of the referenced resource{% endverbatim %}</p>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <p><code>networkConfig.additionalNodeNetworkConfigs[].subnetworkRef.kind</code></p>
+            <p><i>Optional</i></p>
+        </td>
+        <td>
+            <p><code class="apitype">string</code></p>
+            <p>{% verbatim %}Kind of the referent.{% endverbatim %}</p>
         </td>
     </tr>
     <tr>
@@ -576,7 +614,17 @@ version: string
         </td>
         <td>
             <p><code class="apitype">string</code></p>
-            <p>{% verbatim %}Allowed value: The `selfLink` field of a `ComputeSubnetwork` resource.{% endverbatim %}</p>
+            <p>{% verbatim %}The external name of the referenced resource{% endverbatim %}</p>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <p><code>networkConfig.additionalPodNetworkConfigs[].subnetworkRef.kind</code></p>
+            <p><i>Optional</i></p>
+        </td>
+        <td>
+            <p><code class="apitype">string</code></p>
+            <p>{% verbatim %}Kind of the referent.{% endverbatim %}</p>
         </td>
     </tr>
     <tr>
@@ -706,7 +754,17 @@ version: string
         </td>
         <td>
             <p><code class="apitype">string</code></p>
-            <p>{% verbatim %}Allowed value: The `selfLink` field of a `KMSCryptoKey` resource.{% endverbatim %}</p>
+            <p>{% verbatim %}The external name of the referenced resource{% endverbatim %}</p>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <p><code>nodeConfig.bootDiskKMSCryptoKeyRef.kind</code></p>
+            <p><i>Optional</i></p>
+        </td>
+        <td>
+            <p><code class="apitype">string</code></p>
+            <p>{% verbatim %}Kind of the referent.{% endverbatim %}</p>
         </td>
     </tr>
     <tr>
@@ -1166,9 +1224,7 @@ version: string
         </td>
         <td>
             <p><code class="apitype">object</code></p>
-            <p>{% verbatim %}Immutable. Setting this field will assign instances
-of this pool to run on the specified node group. This is useful
-for running workloads on sole tenant nodes.{% endverbatim %}</p>
+            <p>{% verbatim %}Immutable. Setting this field will assign instances of this pool to run on the specified node group. This is useful for running workloads on sole tenant nodes.{% endverbatim %}</p>
         </td>
     </tr>
     <tr>
@@ -1178,7 +1234,17 @@ for running workloads on sole tenant nodes.{% endverbatim %}</p>
         </td>
         <td>
             <p><code class="apitype">string</code></p>
-            <p>{% verbatim %}Allowed value: The `name` field of a `ComputeNodeGroup` resource.{% endverbatim %}</p>
+            <p>{% verbatim %}The external name of the referenced resource{% endverbatim %}</p>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <p><code>nodeConfig.nodeGroupRef.kind</code></p>
+            <p><i>Optional</i></p>
+        </td>
+        <td>
+            <p><code class="apitype">string</code></p>
+            <p>{% verbatim %}Kind of the referent.{% endverbatim %}</p>
         </td>
     </tr>
     <tr>
@@ -1328,7 +1394,17 @@ for running workloads on sole tenant nodes.{% endverbatim %}</p>
         </td>
         <td>
             <p><code class="apitype">string</code></p>
-            <p>{% verbatim %}Allowed value: The `email` field of an `IAMServiceAccount` resource.{% endverbatim %}</p>
+            <p>{% verbatim %}The external name of the referenced resource{% endverbatim %}</p>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <p><code>nodeConfig.serviceAccountRef.kind</code></p>
+            <p><i>Optional</i></p>
+        </td>
+        <td>
+            <p><code class="apitype">string</code></p>
+            <p>{% verbatim %}Kind of the referent.{% endverbatim %}</p>
         </td>
     </tr>
     <tr>
@@ -1618,7 +1694,17 @@ for running workloads on sole tenant nodes.{% endverbatim %}</p>
         </td>
         <td>
             <p><code class="apitype">string</code></p>
-            <p>{% verbatim %}Allowed value: The `selfLink` field of a `ComputeResourcePolicy` resource.{% endverbatim %}</p>
+            <p>{% verbatim %}The external name of the referenced resource{% endverbatim %}</p>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <p><code>placementPolicy.policyNameRef.kind</code></p>
+            <p><i>Optional</i></p>
+        </td>
+        <td>
+            <p><code class="apitype">string</code></p>
+            <p>{% verbatim %}Kind of the referent.{% endverbatim %}</p>
         </td>
     </tr>
     <tr>
@@ -1668,7 +1754,7 @@ for running workloads on sole tenant nodes.{% endverbatim %}</p>
         </td>
         <td>
             <p><code class="apitype">string</code></p>
-            <p>{% verbatim %}Immutable. Optional. The name of the resource. Used for creation and acquisition. When unset, the value of `metadata.name` is used as the default.{% endverbatim %}</p>
+            <p>{% verbatim %}Immutable. The ContainerNodePool name. If not given, the metadata.name will be used.{% endverbatim %}</p>
         </td>
     </tr>
     <tr>
@@ -1818,7 +1904,7 @@ operation: string
         <td><code>conditions</code></td>
         <td>
             <p><code class="apitype">list (object)</code></p>
-            <p>{% verbatim %}Conditions represent the latest available observation of the resource's current state.{% endverbatim %}</p>
+            <p>{% verbatim %}Conditions represent the latest available observations of the object's current state.{% endverbatim %}</p>
         </td>
     </tr>
     <tr>
@@ -1902,7 +1988,7 @@ operation: string
         <td><code>observedState</code></td>
         <td>
             <p><code class="apitype">object</code></p>
-            <p>{% verbatim %}The observed state of the underlying GCP resource.{% endverbatim %}</p>
+            <p>{% verbatim %}ObservedState is the state of the resource as most recently observed in GCP.{% endverbatim %}</p>
         </td>
     </tr>
     <tr>

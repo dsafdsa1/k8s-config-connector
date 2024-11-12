@@ -334,9 +334,7 @@ type NodepoolNodeConfig struct {
 	// +optional
 	MinCpuPlatform *string `json:"minCpuPlatform,omitempty"`
 
-	/* Immutable. Setting this field will assign instances
-	of this pool to run on the specified node group. This is useful
-	for running workloads on sole tenant nodes. */
+	/* Immutable. Setting this field will assign instances of this pool to run on the specified node group. This is useful for running workloads on sole tenant nodes. */
 	// +optional
 	NodeGroupRef *v1alpha1.ResourceRef `json:"nodeGroupRef,omitempty"`
 
@@ -537,7 +535,7 @@ type ContainerNodePoolSpec struct {
 	// +optional
 	PlacementPolicy *NodepoolPlacementPolicy `json:"placementPolicy,omitempty"`
 
-	/* Immutable. Optional. The name of the resource. Used for creation and acquisition. When unset, the value of `metadata.name` is used as the default. */
+	/* Immutable. The ContainerNodePool name. If not given, the metadata.name will be used. */
 	// +optional
 	ResourceID *string `json:"resourceID,omitempty"`
 
@@ -570,7 +568,7 @@ type ContainerNodePoolStatus struct {
 	// +optional
 	ObservedGeneration *int64 `json:"observedGeneration,omitempty"`
 
-	/* The observed state of the underlying GCP resource. */
+	/* ObservedState is the state of the resource as most recently observed in GCP. */
 	// +optional
 	ObservedState *NodepoolObservedStateStatus `json:"observedState,omitempty"`
 
