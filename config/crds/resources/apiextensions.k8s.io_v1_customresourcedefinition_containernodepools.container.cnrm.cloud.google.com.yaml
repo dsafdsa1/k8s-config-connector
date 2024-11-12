@@ -16,6 +16,7 @@ spec:
     categories:
     - gcp
     kind: ContainerNodePool
+    listKind: ContainerNodePoolList
     plural: containernodepools
     shortNames:
     - gcpcontainernodepool
@@ -43,20 +44,22 @@ spec:
     name: v1beta1
     schema:
       openAPIV3Schema:
+        description: ContainerNodePool is the Schema for the ContainerNodePool API
         properties:
           apiVersion:
-            description: 'apiVersion defines the versioned schema of this representation
+            description: 'APIVersion defines the versioned schema of this representation
               of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
             type: string
           kind:
-            description: 'kind is a string value representing the REST resource this
+            description: 'Kind is a string value representing the REST resource this
               object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
             type: string
           metadata:
             type: object
           spec:
+            description: ContainerNodePoolSpec defines the desired state of ContainerNodePool
             properties:
               autoscaling:
                 description: Configuration required by cluster autoscaler to adjust
@@ -73,20 +76,24 @@ spec:
                   maxNodeCount:
                     description: Maximum number of nodes per zone in the node pool.
                       Must be >= min_node_count. Cannot be used with total limits.
+                    format: int64
                     type: integer
                   minNodeCount:
                     description: Minimum number of nodes per zone in the node pool.
                       Must be >=0 and <= max_node_count. Cannot be used with total
                       limits.
+                    format: int64
                     type: integer
                   totalMaxNodeCount:
                     description: Maximum number of all nodes in the node pool. Must
                       be >= total_min_node_count. Cannot be used with per zone limits.
+                    format: int64
                     type: integer
                   totalMinNodeCount:
                     description: Minimum number of all nodes in the node pool. Must
                       be >=0 and <= total_max_node_count. Cannot be used with per
                       zone limits.
+                    format: int64
                     type: integer
                 type: object
               clusterRef:
@@ -96,18 +103,23 @@ spec:
                     - external
                   required:
                   - name
+                  - kind
                 - not:
                     anyOf:
                     - required:
                       - name
                     - required:
                       - namespace
+                    - required:
+                      - kind
                   required:
                   - external
                 properties:
                   external:
-                    description: 'Allowed value: The `name` field of a `ContainerCluster`
-                      resource.'
+                    description: The external name of the referenced resource
+                    type: string
+                  kind:
+                    description: Kind of the referent.
                     type: string
                   name:
                     description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
@@ -120,6 +132,7 @@ spec:
                 description: Immutable. The initial number of nodes for the pool.
                   In regional or multi-zonal clusters, this is the number of nodes
                   per zone. Changing this will force recreation of the resource.
+                format: int64
                 type: integer
               location:
                 description: Immutable. The location (region or zone) of the cluster.
@@ -140,6 +153,7 @@ spec:
                   node pool. Note that this does not work on node pools which are
                   "route-based" - that is, node pools belonging to clusters that do
                   not have IP Aliasing enabled.
+                format: int64
                 type: integer
               namePrefix:
                 description: Immutable. Creates a unique name for the node pool beginning
@@ -164,18 +178,23 @@ spec:
                               - external
                             required:
                             - name
+                            - kind
                           - not:
                               anyOf:
                               - required:
                                 - name
                               - required:
                                 - namespace
+                              - required:
+                                - kind
                             required:
                             - external
                           properties:
                             external:
-                              description: 'Allowed value: The `selfLink` field of
-                                a `ComputeNetwork` resource.'
+                              description: The external name of the referenced resource
+                              type: string
+                            kind:
+                              description: Kind of the referent.
                               type: string
                             name:
                               description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
@@ -194,18 +213,23 @@ spec:
                               - external
                             required:
                             - name
+                            - kind
                           - not:
                               anyOf:
                               - required:
                                 - name
                               - required:
                                 - namespace
+                              - required:
+                                - kind
                             required:
                             - external
                           properties:
                             external:
-                              description: 'Allowed value: The `selfLink` field of
-                                a `ComputeSubnetwork` resource.'
+                              description: The external name of the referenced resource
+                              type: string
+                            kind:
+                              description: Kind of the referent.
                               type: string
                             name:
                               description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
@@ -226,6 +250,7 @@ spec:
                         maxPodsPerNode:
                           description: Immutable. The maximum number of pods per node
                             which use this pod network.
+                          format: int64
                           type: integer
                         secondaryPodRange:
                           description: Immutable. The name of the secondary range
@@ -240,18 +265,23 @@ spec:
                               - external
                             required:
                             - name
+                            - kind
                           - not:
                               anyOf:
                               - required:
                                 - name
                               - required:
                                 - namespace
+                              - required:
+                                - kind
                             required:
                             - external
                           properties:
                             external:
-                              description: 'Allowed value: The `selfLink` field of
-                                a `ComputeSubnetwork` resource.'
+                              description: The external name of the referenced resource
+                              type: string
+                            kind:
+                              description: Kind of the referent.
                               type: string
                             name:
                               description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
@@ -308,6 +338,7 @@ spec:
                           core. To disable simultaneous multithreading (SMT) set this
                           to 1. If unset, the maximum number of threads supported
                           per core by the underlying processor is assumed.
+                        format: int64
                         type: integer
                     required:
                     - threadsPerCore
@@ -319,18 +350,23 @@ spec:
                         - external
                       required:
                       - name
+                      - kind
                     - not:
                         anyOf:
                         - required:
                           - name
                         - required:
                           - namespace
+                        - required:
+                          - kind
                       required:
                       - external
                     properties:
                       external:
-                        description: 'Allowed value: The `selfLink` field of a `KMSCryptoKey`
-                          resource.'
+                        description: The external name of the referenced resource
+                        type: string
+                      kind:
+                        description: Kind of the referent.
                         type: string
                       name:
                         description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
@@ -355,6 +391,7 @@ spec:
                   diskSizeGb:
                     description: Immutable. Size of the disk attached to each node,
                       specified in GB. The smallest allowed disk size is 10GB.
+                    format: int64
                     type: integer
                   diskType:
                     description: Immutable. Type of the disk attached to each node.
@@ -369,6 +406,7 @@ spec:
                           ephemeral storage. Uses NVMe interfaces. Each local SSD
                           must be 375 or 3000 GB in size, and all local SSDs must
                           share the same size.
+                        format: int64
                         type: integer
                     required:
                     - localSsdCount
@@ -382,6 +420,7 @@ spec:
                           ephemeral storage. Uses NVMe interfaces. Each local SSD
                           must be 375 or 3000 GB in size, and all local SSDs must
                           share the same size.
+                        format: int64
                         type: integer
                     required:
                     - localSsdCount
@@ -412,6 +451,7 @@ spec:
                         count:
                           description: Immutable. The number of the accelerator cards
                             exposed to an instance.
+                          format: int64
                           type: integer
                         gpuDriverInstallationConfig:
                           description: Immutable. Configuration for auto installation
@@ -440,6 +480,7 @@ spec:
                             maxSharedClientsPerGpu:
                               description: Immutable. The maximum number of containers
                                 that can share a GPU.
+                              format: int64
                               type: integer
                           required:
                           - gpuSharingStrategy
@@ -492,6 +533,7 @@ spec:
                       podPidsLimit:
                         description: Controls the maximum number of processes allowed
                           to run in a pod.
+                        format: int64
                         type: integer
                     required:
                     - cpuManagerPolicy
@@ -524,6 +566,7 @@ spec:
                         description: Immutable. Number of raw-block local NVMe SSD
                           disks to be attached to the node. Each local SSD is 375
                           GB in size.
+                        format: int64
                         type: integer
                     required:
                     - localSsdCount
@@ -531,6 +574,7 @@ spec:
                   localSsdCount:
                     description: Immutable. The number of local SSD disks to be attached
                       to the node.
+                    format: int64
                     type: integer
                   loggingVariant:
                     description: Type of logging agent that is used as the default
@@ -553,8 +597,7 @@ spec:
                       newer CPU platform.
                     type: string
                   nodeGroupRef:
-                    description: |-
-                      Immutable. Setting this field will assign instances
+                    description: Immutable. Setting this field will assign instances
                       of this pool to run on the specified node group. This is useful
                       for running workloads on sole tenant nodes.
                     oneOf:
@@ -563,18 +606,23 @@ spec:
                         - external
                       required:
                       - name
+                      - kind
                     - not:
                         anyOf:
                         - required:
                           - name
                         - required:
                           - namespace
+                        - required:
+                          - kind
                       required:
                       - external
                     properties:
                       external:
-                        description: 'Allowed value: The `name` field of a `ComputeNodeGroup`
-                          resource.'
+                        description: The external name of the referenced resource
+                        type: string
+                      kind:
+                        description: Kind of the referent.
                         type: string
                       name:
                         description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
@@ -636,18 +684,23 @@ spec:
                         - external
                       required:
                       - name
+                      - kind
                     - not:
                         anyOf:
                         - required:
                           - name
                         - required:
                           - namespace
+                        - required:
+                          - kind
                       required:
                       - external
                     properties:
                       external:
-                        description: 'Allowed value: The `email` field of an `IAMServiceAccount`
-                          resource.'
+                        description: The external name of the referenced resource
+                        type: string
+                      kind:
+                        description: Kind of the referent.
                         type: string
                       name:
                         description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
@@ -742,6 +795,7 @@ spec:
                 description: The number of nodes per instance group. This field can
                   be used to update the number of nodes per instance group but should
                   not be used alongside autoscaling.
+                format: int64
                 type: integer
               nodeLocations:
                 description: The list of zones in which the node pool's nodes should
@@ -765,18 +819,23 @@ spec:
                         - external
                       required:
                       - name
+                      - kind
                     - not:
                         anyOf:
                         - required:
                           - name
                         - required:
                           - namespace
+                        - required:
+                          - kind
                       required:
                       - external
                     properties:
                       external:
-                        description: 'Allowed value: The `selfLink` field of a `ComputeResourcePolicy`
-                          resource.'
+                        description: The external name of the referenced resource
+                        type: string
+                      kind:
+                        description: Kind of the referent.
                         type: string
                       name:
                         description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
@@ -795,10 +854,12 @@ spec:
                 - type
                 type: object
               resourceID:
-                description: Immutable. Optional. The name of the resource. Used for
-                  creation and acquisition. When unset, the value of `metadata.name`
-                  is used as the default.
+                description: Immutable. The ContainerNodePool name. If not given,
+                  the metadata.name will be used.
                 type: string
+                x-kubernetes-validations:
+                - message: ResourceID field is immutable
+                  rule: self == oldSelf
               upgradeSettings:
                 description: Specify node upgrade settings to change how many nodes
                   GKE attempts to upgrade at once. The number of nodes upgraded simultaneously
@@ -818,6 +879,7 @@ spec:
                         properties:
                           batchNodeCount:
                             description: Number of blue nodes to drain in a batch.
+                            format: int64
                             type: integer
                           batchPercentage:
                             description: Percentage of the blue pool nodes to drain
@@ -835,12 +897,14 @@ spec:
                       to the node pool during an upgrade. Increasing max_surge raises
                       the number of nodes that can be upgraded simultaneously. Can
                       be set to 0 or greater.
+                    format: int64
                     type: integer
                   maxUnavailable:
                     description: The number of nodes that can be simultaneously unavailable
                       during an upgrade. Increasing max_unavailable raises the number
                       of nodes that can be upgraded in parallel. Can be set to 0 or
                       greater.
+                    format: int64
                     type: integer
                   strategy:
                     description: Update strategy for the given nodepool.
@@ -853,10 +917,12 @@ spec:
             - location
             type: object
           status:
+            description: ContainerNodePoolStatus defines the config connector machine
+              state of ContainerNodePool
             properties:
               conditions:
-                description: Conditions represent the latest available observation
-                  of the resource's current state.
+                description: Conditions represent the latest available observations
+                  of the object's current state.
                 items:
                   properties:
                     lastTransitionTime:
@@ -898,9 +964,11 @@ spec:
                   If this is equal to metadata.generation, then that means that the
                   current reported status reflects the most recent desired state of
                   the resource.
+                format: int64
                 type: integer
               observedState:
-                description: The observed state of the underlying GCP resource.
+                description: ObservedState is the state of the resource as most recently
+                  observed in GCP.
                 properties:
                   version:
                     type: string
@@ -915,9 +983,3 @@ spec:
     storage: true
     subresources:
       status: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []

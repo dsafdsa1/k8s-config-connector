@@ -45,3 +45,14 @@ type Condition struct {
 	// Type is the type of the condition.
 	Type string `json:"type,omitempty"`
 }
+
+type ResourceRef struct {
+	/* The external name of the referenced resource */
+	External string `json:"external,omitempty"`
+	/* Kind of the referent. */
+	Kind string `json:"kind,omitempty"`
+	/* Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names */
+	Name string `json:"name,omitempty"`
+	/* Namespace of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/ */
+	Namespace string `json:"namespace,omitempty"`
+}
