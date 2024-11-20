@@ -16,6 +16,7 @@ spec:
     categories:
     - gcp
     kind: ContainerNodePool
+    listKind: ContainerNodePoolList
     plural: containernodepools
     shortNames:
     - gcpcontainernodepool
@@ -43,20 +44,22 @@ spec:
     name: v1beta1
     schema:
       openAPIV3Schema:
+        description: ContainerNodePool is the Schema for the ContainerNodePool API
         properties:
           apiVersion:
-            description: 'apiVersion defines the versioned schema of this representation
+            description: 'APIVersion defines the versioned schema of this representation
               of an object. Servers should convert recognized schemas to the latest
-              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#resources'
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
             type: string
           kind:
-            description: 'kind is a string value representing the REST resource this
+            description: 'Kind is a string value representing the REST resource this
               object represents. Servers may infer this from the endpoint the client
-              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/api-conventions.md#types-kinds'
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
             type: string
           metadata:
             type: object
           spec:
+            description: ContainerNodePoolSpec defines the desired state of ContainerNodePool
             properties:
               autoscaling:
                 description: Configuration required by cluster autoscaler to adjust
@@ -64,29 +67,31 @@ spec:
                   autoscaling, set minNodeCount and maxNodeCount to 0.
                 properties:
                   locationPolicy:
-                    description: Location policy specifies the algorithm used when
-                      scaling-up the node pool. "BALANCED" - Is a best effort policy
-                      that aims to balance the sizes of available zones. "ANY" - Instructs
-                      the cluster autoscaler to prioritize utilization of unused reservations,
-                      and reduces preemption risk for Spot VMs.
+                    description: Location policy used when scaling up a nodepool.
                     type: string
                   maxNodeCount:
-                    description: Maximum number of nodes per zone in the node pool.
-                      Must be >= min_node_count. Cannot be used with total limits.
+                    description: Maximum number of nodes for one location in the NodePool.
+                      Must be >= min_node_count. There has to be enough quota to scale
+                      up the cluster.
+                    format: int32
                     type: integer
                   minNodeCount:
-                    description: Minimum number of nodes per zone in the node pool.
-                      Must be >=0 and <= max_node_count. Cannot be used with total
-                      limits.
+                    description: Minimum number of nodes for one location in the NodePool.
+                      Must be >= 1 and <= max_node_count.
+                    format: int32
                     type: integer
                   totalMaxNodeCount:
-                    description: Maximum number of all nodes in the node pool. Must
-                      be >= total_min_node_count. Cannot be used with per zone limits.
+                    description: Maximum number of nodes in the node pool. Must be
+                      greater than total_min_node_count. There has to be enough quota
+                      to scale up the cluster. The total_*_node_count fields are mutually
+                      exclusive with the *_node_count fields.
+                    format: int32
                     type: integer
                   totalMinNodeCount:
-                    description: Minimum number of all nodes in the node pool. Must
-                      be >=0 and <= total_max_node_count. Cannot be used with per
-                      zone limits.
+                    description: Minimum number of nodes in the node pool. Must be
+                      greater than 1 less than total_max_node_count. The total_*_node_count
+                      fields are mutually exclusive with the *_node_count fields.
+                    format: int32
                     type: integer
                 type: object
               clusterRef:
@@ -96,18 +101,23 @@ spec:
                     - external
                   required:
                   - name
+                  - kind
                 - not:
                     anyOf:
                     - required:
                       - name
                     - required:
                       - namespace
+                    - required:
+                      - kind
                   required:
                   - external
                 properties:
                   external:
-                    description: 'Allowed value: The `name` field of a `ContainerCluster`
-                      resource.'
+                    description: The external name of the referenced resource
+                    type: string
+                  kind:
+                    description: Kind of the referent.
                     type: string
                   name:
                     description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
@@ -120,6 +130,7 @@ spec:
                 description: Immutable. The initial number of nodes for the pool.
                   In regional or multi-zonal clusters, this is the number of nodes
                   per zone. Changing this will force recreation of the resource.
+                format: int64
                 type: integer
               location:
                 description: Immutable. The location (region or zone) of the cluster.
@@ -140,6 +151,7 @@ spec:
                   node pool. Note that this does not work on node pools which are
                   "route-based" - that is, node pools belonging to clusters that do
                   not have IP Aliasing enabled.
+                format: int64
                 type: integer
               namePrefix:
                 description: Immutable. Creates a unique name for the node pool beginning
@@ -150,32 +162,37 @@ spec:
                   it overrides the cluster-level defaults.
                 properties:
                   additionalNodeNetworkConfigs:
-                    description: Immutable. We specify the additional node networks
-                      for this node pool using this list. Each node network corresponds
-                      to an additional interface.
+                    description: We specify the additional node networks for this
+                      node pool using this list. Each node network corresponds to
+                      an additional interface
                     items:
                       properties:
                         networkRef:
-                          description: Immutable. Name of the VPC where the additional
-                            interface belongs.
+                          description: Name of the VPC where the additional interface
+                            belongs
                           oneOf:
                           - not:
                               required:
                               - external
                             required:
                             - name
+                            - kind
                           - not:
                               anyOf:
                               - required:
                                 - name
                               - required:
                                 - namespace
+                              - required:
+                                - kind
                             required:
                             - external
                           properties:
                             external:
-                              description: 'Allowed value: The `selfLink` field of
-                                a `ComputeNetwork` resource.'
+                              description: The external name of the referenced resource
+                              type: string
+                            kind:
+                              description: Kind of the referent.
                               type: string
                             name:
                               description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
@@ -186,26 +203,31 @@ spec:
                               type: string
                           type: object
                         subnetworkRef:
-                          description: Immutable. Name of the subnetwork where the
-                            additional interface belongs.
+                          description: Name of the subnetwork where the additional
+                            interface belongs
                           oneOf:
                           - not:
                               required:
                               - external
                             required:
                             - name
+                            - kind
                           - not:
                               anyOf:
                               - required:
                                 - name
                               - required:
                                 - namespace
+                              - required:
+                                - kind
                             required:
                             - external
                           properties:
                             external:
-                              description: 'Allowed value: The `selfLink` field of
-                                a `ComputeSubnetwork` resource.'
+                              description: The external name of the referenced resource
+                              type: string
+                            kind:
+                              description: Kind of the referent.
                               type: string
                             name:
                               description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
@@ -218,40 +240,46 @@ spec:
                       type: object
                     type: array
                   additionalPodNetworkConfigs:
-                    description: Immutable. We specify the additional pod networks
-                      for this node pool using this list. Each pod network corresponds
-                      to an additional alias IP range for the node.
+                    description: We specify the additional pod networks for this node
+                      pool using this list. Each pod network corresponds to an additional
+                      alias IP range for the node
                     items:
                       properties:
                         maxPodsPerNode:
-                          description: Immutable. The maximum number of pods per node
-                            which use this pod network.
+                          description: The maximum number of pods per node which use
+                            this pod network.
+                          format: int64
                           type: integer
                         secondaryPodRange:
-                          description: Immutable. The name of the secondary range
-                            on the subnet which provides IP address for this pod range.
+                          description: The name of the secondary range on the subnet
+                            which provides IP address for this pod range.
                           type: string
                         subnetworkRef:
-                          description: Immutable. Name of the subnetwork where the
-                            additional pod network belongs.
+                          description: Name of the subnetwork where the additional
+                            pod network belongs.
                           oneOf:
                           - not:
                               required:
                               - external
                             required:
                             - name
+                            - kind
                           - not:
                               anyOf:
                               - required:
                                 - name
                               - required:
                                 - namespace
+                              - required:
+                                - kind
                             required:
                             - external
                           properties:
                             external:
-                              description: 'Allowed value: The `selfLink` field of
-                                a `ComputeSubnetwork` resource.'
+                              description: The external name of the referenced resource
+                              type: string
+                            kind:
+                              description: Kind of the referent.
                               type: string
                             name:
                               description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
@@ -264,53 +292,90 @@ spec:
                       type: object
                     type: array
                   createPodRange:
-                    description: Immutable. Whether to create a new range for pod
-                      IPs in this node pool. Defaults are provided for pod_range and
-                      pod_ipv4_cidr_block if they are not specified.
+                    description: |-
+                      Input only. Whether to create a new range for pod IPs in this node pool.
+                       Defaults are provided for `pod_range` and `pod_ipv4_cidr_block` if they
+                       are not specified.
+
+                       If neither `create_pod_range` or `pod_range` are specified, the
+                       cluster-level default (`ip_allocation_policy.cluster_ipv4_cidr_block`) is
+                       used.
+
+                       Only applicable if `ip_allocation_policy.use_ip_aliases` is true.
+
+                       This field cannot be changed after the node pool has been created.
                     type: boolean
                   enablePrivateNodes:
-                    description: Whether nodes have internal IP addresses only.
+                    description: Whether nodes have internal IP addresses only. If
+                      enable_private_nodes is not specified, then the value is derived
+                      from [cluster.privateClusterConfig.enablePrivateNodes][google.container.v1beta1.PrivateClusterConfig.enablePrivateNodes]
                     type: boolean
                   podCidrOverprovisionConfig:
-                    description: Immutable. Configuration for node-pool level pod
-                      cidr overprovision. If not set, the cluster level setting will
-                      be inherited.
+                    description: |-
+                      [PRIVATE FIELD]
+                       Pod CIDR size overprovisioning config for the nodepool.
+
+                       Pod CIDR size per node depends on max_pods_per_node. By default, the value
+                       of max_pods_per_node is rounded off to next power of 2 and we then double
+                       that to get the size of pod CIDR block per node.
+                       Example: max_pods_per_node of 30 would result in 64 IPs (/26).
+
+                       This config can disable the doubling of IPs (we still round off to next
+                       power of 2)
+                       Example: max_pods_per_node of 30 will result in 32 IPs (/27) when
+                       overprovisioning is disabled.
                     properties:
                       disabled:
+                        description: 'Whether Pod CIDR overprovisioning is disabled.
+                          Note: Pod CIDR overprovisioning is enabled by default.'
                         type: boolean
                     required:
                     - disabled
                     type: object
                   podIpv4CidrBlock:
-                    description: Immutable. The IP address range for pod IPs in this
-                      node pool. Only applicable if create_pod_range is true. Set
-                      to blank to have a range chosen with the default size. Set to
-                      /netmask (e.g. /14) to have a range chosen with a specific netmask.
-                      Set to a CIDR notation (e.g. 10.96.0.0/14) to pick a specific
-                      range to use.
+                    description: |-
+                      The IP address range for pod IPs in this node pool.
+
+                       Only applicable if `create_pod_range` is true.
+
+                       Set to blank to have a range chosen with the default size.
+
+                       Set to /netmask (e.g. `/14`) to have a range chosen with a specific
+                       netmask.
+
+                       Set to a
+                       [CIDR](https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing)
+                       notation (e.g. `10.96.0.0/14`) to pick a specific range to use.
+
+                       Only applicable if `ip_allocation_policy.use_ip_aliases` is true.
+
+                       This field cannot be changed after the node pool has been created.
                     type: string
                   podRange:
-                    description: Immutable. The ID of the secondary range for pod
-                      IPs. If create_pod_range is true, this ID is used for the new
-                      range. If create_pod_range is false, uses an existing secondary
-                      range with this ID.
+                    description: |-
+                      The ID of the secondary range for pod IPs.
+                       If `create_pod_range` is true, this ID is used for the new range.
+                       If `create_pod_range` is false, uses an existing secondary range with this
+                       ID.
+
+                       Only applicable if `ip_allocation_policy.use_ip_aliases` is true.
+
+                       This field cannot be changed after the node pool has been created.
                     type: string
                 type: object
               nodeConfig:
                 description: Immutable. The configuration of the nodepool.
                 properties:
                   advancedMachineFeatures:
-                    description: Immutable. Specifies options for controlling advanced
-                      machine features.
+                    description: Advanced features for the Compute Engine VM.
                     properties:
                       threadsPerCore:
-                        description: Immutable. The number of threads per physical
-                          core. To disable simultaneous multithreading (SMT) set this
-                          to 1. If unset, the maximum number of threads supported
-                          per core by the underlying processor is assumed.
+                        description: The number of threads per physical core. To disable
+                          simultaneous multithreading (SMT) set this to 1. If unset,
+                          the maximum number of threads supported per core by the
+                          underlying processor is assumed.
+                        format: int64
                         type: integer
-                    required:
-                    - threadsPerCore
                     type: object
                   bootDiskKMSCryptoKeyRef:
                     oneOf:
@@ -319,18 +384,23 @@ spec:
                         - external
                       required:
                       - name
+                      - kind
                     - not:
                         anyOf:
                         - required:
                           - name
                         - required:
                           - namespace
+                        - required:
+                          - kind
                       required:
                       - external
                     properties:
                       external:
-                        description: 'Allowed value: The `selfLink` field of a `KMSCryptoKey`
-                          resource.'
+                        description: The external name of the referenced resource
+                        type: string
+                      kind:
+                        description: Kind of the referent.
                         type: string
                       name:
                         description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
@@ -340,69 +410,96 @@ spec:
                         type: string
                     type: object
                   confidentialNodes:
-                    description: 'Immutable. Configuration for the confidential nodes
-                      feature, which makes nodes run on confidential VMs. Warning:
-                      This configuration can''t be changed (or added/removed) after
-                      pool creation without deleting and recreating the entire pool.'
+                    description: Confidential nodes config. All the nodes in the node
+                      pool will be Confidential VM once enabled.
                     properties:
                       enabled:
-                        description: Immutable. Whether Confidential Nodes feature
-                          is enabled for all nodes in this pool.
+                        description: Whether Confidential Nodes feature is enabled.
                         type: boolean
-                    required:
-                    - enabled
                     type: object
                   diskSizeGb:
-                    description: Immutable. Size of the disk attached to each node,
-                      specified in GB. The smallest allowed disk size is 10GB.
+                    description: |-
+                      Size of the disk attached to each node, specified in GB.
+                       The smallest allowed disk size is 10GB.
+
+                       If unspecified, the default disk size is 100GB.
+                    format: int32
                     type: integer
                   diskType:
-                    description: Immutable. Type of the disk attached to each node.
-                      Such as pd-standard, pd-balanced or pd-ssd.
+                    description: |-
+                      Type of the disk attached to each node (e.g. 'pd-standard', 'pd-ssd' or
+                       'pd-balanced')
+
+                       If unspecified, the default disk type is 'pd-standard'
                     type: string
                   ephemeralStorageConfig:
-                    description: Immutable. Parameters for the ephemeral storage filesystem.
+                    description: Parameters for the ephemeral storage filesystem.
                       If unspecified, ephemeral storage is backed by the boot disk.
                     properties:
                       localSsdCount:
-                        description: Immutable. Number of local SSDs to use to back
-                          ephemeral storage. Uses NVMe interfaces. Each local SSD
-                          must be 375 or 3000 GB in size, and all local SSDs must
-                          share the same size.
+                        description: |-
+                          Number of local SSDs to use to back ephemeral storage. Uses NVMe
+                           interfaces. The limit for this value is dependent upon the maximum number
+                           of disk available on a machine per zone. See:
+                           https://cloud.google.com/compute/docs/disks/local-ssd
+                           for more information.
+
+                           A zero (or unset) value has different meanings depending on machine type
+                           being used:
+                           1. For pre-Gen3 machines, which support flexible numbers of local ssds,
+                           zero (or unset) means to disable using local SSDs as ephemeral storage.
+                           2. For Gen3 machines which dictate a specific number of local ssds, zero
+                           (or unset) means to use the default number of local ssds that goes with
+                           that machine type. For example, for a c3-standard-8-lssd machine, 2 local
+                           ssds would be provisioned. For c3-standard-8 (which doesn't support local
+                           ssds), 0 will be provisioned. See
+                           https://cloud.google.com/compute/docs/disks/local-ssd#choose_number_local_ssds
+                           for more info.
+                        format: int32
                         type: integer
-                    required:
-                    - localSsdCount
                     type: object
                   ephemeralStorageLocalSsdConfig:
-                    description: Immutable. Parameters for the ephemeral storage filesystem.
-                      If unspecified, ephemeral storage is backed by the boot disk.
+                    description: Parameters for the node ephemeral storage using Local
+                      SSDs. If unspecified, ephemeral storage is backed by the boot
+                      disk. This field is functionally equivalent to the ephemeral_storage_config
                     properties:
                       localSsdCount:
-                        description: Immutable. Number of local SSDs to use to back
-                          ephemeral storage. Uses NVMe interfaces. Each local SSD
-                          must be 375 or 3000 GB in size, and all local SSDs must
-                          share the same size.
+                        description: |-
+                          Number of local SSDs to use to back ephemeral storage. Uses NVMe
+                           interfaces.
+
+                           A zero (or unset) value has different meanings depending on machine type
+                           being used:
+                           1. For pre-Gen3 machines, which support flexible numbers of local ssds,
+                           zero (or unset) means to disable using local SSDs as ephemeral storage. The
+                           limit for this value is dependent upon the maximum number of disk
+                           available on a machine per zone. See:
+                           https://cloud.google.com/compute/docs/disks/local-ssd
+                           for more information.
+                           2. For Gen3 machines which dictate a specific number of local ssds, zero
+                           (or unset) means to use the default number of local ssds that goes with
+                           that machine type. For example, for a c3-standard-8-lssd machine, 2 local
+                           ssds would be provisioned. For c3-standard-8 (which doesn't support local
+                           ssds), 0 will be provisioned. See
+                           https://cloud.google.com/compute/docs/disks/local-ssd#choose_number_local_ssds
+                           for more info.
+                        format: int32
                         type: integer
-                    required:
-                    - localSsdCount
                     type: object
                   fastSocket:
-                    description: Enable or disable NCCL Fast Socket in the node pool.
+                    description: Enable or disable NCCL fast socket for the node pool.
                     properties:
                       enabled:
-                        description: Whether or not NCCL Fast Socket is enabled.
+                        description: Whether Fast Socket features are enabled in the
+                          node pool.
                         type: boolean
-                    required:
-                    - enabled
                     type: object
                   gcfsConfig:
-                    description: Immutable. GCFS configuration for this node.
+                    description: GCFS (Google Container File System) configs.
                     properties:
                       enabled:
-                        description: Immutable. Whether or not GCFS is enabled.
+                        description: Whether to use GCFS.
                         type: boolean
-                    required:
-                    - enabled
                     type: object
                   guestAccelerator:
                     description: Immutable. List of the type and count of accelerator
@@ -412,17 +509,15 @@ spec:
                         count:
                           description: Immutable. The number of the accelerator cards
                             exposed to an instance.
+                          format: int64
                           type: integer
                         gpuDriverInstallationConfig:
                           description: Immutable. Configuration for auto installation
                             of GPU driver.
                           properties:
                             gpuDriverVersion:
-                              description: Immutable. Mode for how the GPU driver
-                                is installed.
+                              description: Mode for how the GPU driver is installed.
                               type: string
-                          required:
-                          - gpuDriverVersion
                           type: object
                         gpuPartitionSize:
                           description: Immutable. Size of partitions to create on
@@ -433,17 +528,14 @@ spec:
                           description: Immutable. Configuration for GPU sharing.
                           properties:
                             gpuSharingStrategy:
-                              description: Immutable. The type of GPU sharing strategy
-                                to enable on the GPU node. Possible values are described
-                                in the API package (https://pkg.go.dev/google.golang.org/api/container/v1#GPUSharingConfig).
+                              description: The type of GPU sharing strategy to enable
+                                on the GPU node.
                               type: string
                             maxSharedClientsPerGpu:
-                              description: Immutable. The maximum number of containers
-                                that can share a GPU.
+                              description: The max number of containers that can share
+                                a physical GPU.
+                              format: int64
                               type: integer
-                          required:
-                          - gpuSharingStrategy
-                          - maxSharedClientsPerGpu
                           type: object
                         type:
                           description: Immutable. The accelerator type resource name.
@@ -454,83 +546,153 @@ spec:
                       type: object
                     type: array
                   gvnic:
-                    description: Immutable. Enable or disable gvnic in the node pool.
+                    description: Enable or disable gvnic on the node pool.
                     properties:
                       enabled:
-                        description: Immutable. Whether or not gvnic is enabled.
+                        description: Whether gVNIC features are enabled in the node
+                          pool.
                         type: boolean
-                    required:
-                    - enabled
                     type: object
                   hostMaintenancePolicy:
-                    description: Immutable. The maintenance policy for the hosts on
-                      which the GKE VMs run on.
+                    description: HostMaintenancePolicy contains the desired maintenance
+                      policy for the Google Compute Engine hosts.
                     properties:
                       maintenanceInterval:
-                        description: Immutable. .
+                        description: Specifies the frequency of planned maintenance
+                          events.
                         type: string
-                    required:
-                    - maintenanceInterval
                     type: object
                   imageType:
                     description: The image type to use for this node. Note that for
-                      a given image type, the latest version of it will be used.
+                      a given image type, the latest version of it will be used. Please
+                      see https://cloud.google.com/kubernetes-engine/docs/concepts/node-images
+                      for available image types.
                     type: string
                   kubeletConfig:
                     description: Node kubelet configs.
                     properties:
                       cpuCfsQuota:
-                        description: Enable CPU CFS quota enforcement for containers
-                          that specify CPU limits.
-                        type: boolean
+                        description: |-
+                          Enable CPU CFS quota enforcement for containers that specify CPU limits.
+
+                           This option is enabled by default which makes kubelet use CFS quota
+                           (https://www.kernel.org/doc/Documentation/scheduler/sched-bwc.txt) to
+                           enforce container CPU limits. Otherwise, CPU limits will not be enforced at
+                           all.
+
+                           Disable this option to mitigate CPU throttling problems while still having
+                           your pods to be in Guaranteed QoS class by specifying the CPU limits.
+
+                           The default value is 'true' if unspecified.
+                        properties:
+                          value:
+                            description: The bool value.
+                            type: boolean
+                        type: object
                       cpuCfsQuotaPeriod:
-                        description: Set the CPU CFS quota period value 'cpu.cfs_period_us'.
+                        description: |-
+                          Set the CPU CFS quota period value 'cpu.cfs_period_us'.
+
+                           The string must be a sequence of decimal numbers, each with optional
+                           fraction and a unit suffix, such as "300ms".
+                           Valid time units are "ns", "us" (or "µs"), "ms", "s", "m", "h".
+                           The value must be a positive duration.
                         type: string
                       cpuManagerPolicy:
-                        description: Control the CPU management policy on the node.
+                        description: |-
+                          Control the CPU management policy on the node.
+                           See
+                           https://kubernetes.io/docs/tasks/administer-cluster/cpu-management-policies/
+
+                           The following values are allowed.
+                           * "none": the default, which represents the existing scheduling behavior.
+                           * "static": allows pods with certain resource characteristics to be granted
+                           increased CPU affinity and exclusivity on the node.
+                           The default value is 'none' if unspecified.
                         type: string
                       podPidsLimit:
-                        description: Controls the maximum number of processes allowed
-                          to run in a pod.
+                        description: |-
+                          Set the Pod PID limits. See
+                           https://kubernetes.io/docs/concepts/policy/pid-limiting/#pod-pid-limits
+
+                           Controls the maximum number of processes allowed to run in a pod. The value
+                           must be greater than or equal to 1024 and less than 4194304.
+                        format: int64
                         type: integer
-                    required:
-                    - cpuManagerPolicy
                     type: object
                   labels:
                     additionalProperties:
                       type: string
-                    description: The map of Kubernetes labels (key/value pairs) to
+                    description: 'The map of Kubernetes labels (key/value pairs) to
                       be applied to each node. These will added in addition to any
-                      default label(s) that Kubernetes may apply to the node.
+                      default label(s) that Kubernetes may apply to the node. In case
+                      of conflict in label keys, the applied set may differ depending
+                      on the Kubernetes version -- it''s best to assume the behavior
+                      is undefined and conflicts should be avoided. For more information,
+                      including usage and the valid values, see: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/'
                     type: object
                   linuxNodeConfig:
                     description: Parameters that can be configured on Linux nodes.
                     properties:
                       cgroupMode:
-                        description: cgroupMode specifies the cgroup mode to be used
+                        description: cgroup_mode specifies the cgroup mode to be used
                           on the node.
                         type: string
                       sysctls:
                         additionalProperties:
                           type: string
-                        description: The Linux kernel parameters to be applied to
-                          the nodes and all pods running on the nodes.
+                        description: |-
+                          The Linux kernel parameters to be applied to the nodes and all pods running
+                           on the nodes.
+
+                           The following parameters are supported.
+
+                           net.core.busy_poll
+                           net.core.busy_read
+                           net.core.netdev_max_backlog
+                           net.core.rmem_max
+                           net.core.wmem_default
+                           net.core.wmem_max
+                           net.core.optmem_max
+                           net.core.somaxconn
+                           net.ipv4.tcp_rmem
+                           net.ipv4.tcp_wmem
+                           net.ipv4.tcp_tw_reuse
                         type: object
                     type: object
                   localNvmeSsdBlockConfig:
-                    description: Immutable. Parameters for raw-block local NVMe SSDs.
+                    description: Parameters for using raw-block Local NVMe SSDs.
                     properties:
                       localSsdCount:
-                        description: Immutable. Number of raw-block local NVMe SSD
-                          disks to be attached to the node. Each local SSD is 375
-                          GB in size.
+                        description: |-
+                          Number of local NVMe SSDs to use.  The limit for this value is dependent
+                           upon the maximum number of disk available on a machine per zone. See:
+                           https://cloud.google.com/compute/docs/disks/local-ssd
+                           for more information.
+
+                           A zero (or unset) value has different meanings depending on machine type
+                           being used:
+                           1. For pre-Gen3 machines, which support flexible numbers of local ssds,
+                           zero (or unset) means to disable using local SSDs as ephemeral storage.
+                           2. For Gen3 machines which dictate a specific number of local ssds, zero
+                           (or unset) means to use the default number of local ssds that goes with
+                           that machine type. For example, for a c3-standard-8-lssd machine, 2 local
+                           ssds would be provisioned. For c3-standard-8 (which doesn't support local
+                           ssds), 0 will be provisioned. See
+                           https://cloud.google.com/compute/docs/disks/local-ssd#choose_number_local_ssds
+                           for more info.
+                        format: int32
                         type: integer
-                    required:
-                    - localSsdCount
                     type: object
                   localSsdCount:
-                    description: Immutable. The number of local SSD disks to be attached
-                      to the node.
+                    description: |-
+                      The number of local SSD disks to be attached to the node.
+
+                       The limit for this value is dependent upon the maximum number of
+                       disks available on a machine per zone. See:
+                       https://cloud.google.com/compute/docs/disks/local-ssd
+                       for more information.
+                    format: int32
                     type: integer
                   loggingVariant:
                     description: Type of logging agent that is used as the default
@@ -538,23 +700,60 @@ spec:
                       and MAX_THROUGHPUT.
                     type: string
                   machineType:
-                    description: Immutable. The name of a Google Compute Engine machine
-                      type.
+                    description: |-
+                      The name of a Google Compute Engine [machine
+                       type](https://cloud.google.com/compute/docs/machine-types).
+
+                       If unspecified, the default machine type is
+                       `e2-medium`.
                     type: string
                   metadata:
                     additionalProperties:
                       type: string
-                    description: Immutable. The metadata key/value pairs assigned
-                      to instances in the cluster.
+                    description: |-
+                      The metadata key/value pairs assigned to instances in the cluster.
+
+                       Keys must conform to the regexp `[a-zA-Z0-9-_]+` and be less than 128 bytes
+                       in length. These are reflected as part of a URL in the metadata server.
+                       Additionally, to avoid ambiguity, keys must not conflict with any other
+                       metadata keys for the project or be one of the reserved keys:
+
+                        - "cluster-location"
+                        - "cluster-name"
+                        - "cluster-uid"
+                        - "configure-sh"
+                        - "containerd-configure-sh"
+                        - "enable-oslogin"
+                        - "gci-ensure-gke-docker"
+                        - "gci-metrics-enabled"
+                        - "gci-update-strategy"
+                        - "instance-template"
+                        - "kube-env"
+                        - "startup-script"
+                        - "user-data"
+                        - "disable-address-manager"
+                        - "windows-startup-script-ps1"
+                        - "common-psm1"
+                        - "k8s-node-setup-psm1"
+                        - "install-ssh-psm1"
+                        - "user-profile-psm1"
+
+                       Values are free-form strings, and only have meaning as interpreted by
+                       the image running in the instance. The only restriction placed on them is
+                       that each value's size must be less than or equal to 32 KB.
+
+                       The total size of all keys and values must be less than 512 KB.
                     type: object
                   minCpuPlatform:
-                    description: Immutable. Minimum CPU platform to be used by this
-                      instance. The instance may be scheduled on the specified or
-                      newer CPU platform.
+                    description: 'Minimum CPU platform to be used by this instance.
+                      The instance may be scheduled on the specified or newer CPU
+                      platform. Applicable values are the friendly names of CPU platforms,
+                      such as `minCpuPlatform: "Intel Haswell"` or `minCpuPlatform:
+                      "Intel Sandy Bridge"`. For more information, read [how to specify
+                      min CPU platform](https://cloud.google.com/compute/docs/instances/specify-min-cpu-platform).'
                     type: string
                   nodeGroupRef:
-                    description: |-
-                      Immutable. Setting this field will assign instances
+                    description: Immutable. Setting this field will assign instances
                       of this pool to run on the specified node group. This is useful
                       for running workloads on sole tenant nodes.
                     oneOf:
@@ -563,18 +762,23 @@ spec:
                         - external
                       required:
                       - name
+                      - kind
                     - not:
                         anyOf:
                         - required:
                           - name
                         - required:
                           - namespace
+                        - required:
+                          - kind
                       required:
                       - external
                     properties:
                       external:
-                        description: 'Allowed value: The `name` field of a `ComputeNodeGroup`
-                          resource.'
+                        description: The external name of the referenced resource
+                        type: string
+                      kind:
+                        description: Kind of the referent.
                         type: string
                       name:
                         description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
@@ -584,50 +788,64 @@ spec:
                         type: string
                     type: object
                   oauthScopes:
-                    description: Immutable. The set of Google API scopes to be made
-                      available on all of the node VMs.
+                    description: |-
+                      The set of Google API scopes to be made available on all of the
+                       node VMs under the "default" service account.
+
+                       The following scopes are recommended, but not required, and by default are
+                       not included:
+
+                       * `https://www.googleapis.com/auth/compute` is required for mounting
+                       persistent storage on your nodes.
+                       * `https://www.googleapis.com/auth/devstorage.read_only` is required for
+                       communicating with **gcr.io**
+                       (the [Google Container
+                       Registry](https://cloud.google.com/container-registry/)).
+
+                       If unspecified, no scopes are added, unless Cloud Logging or Cloud
+                       Monitoring are enabled, in which case their required scopes will be added.
                     items:
                       type: string
                     type: array
                   preemptible:
-                    description: Immutable. Whether the nodes are created as preemptible
-                      VM instances.
+                    description: 'Whether the nodes are created as preemptible VM
+                      instances. See: https://cloud.google.com/compute/docs/instances/preemptible
+                      for more information about preemptible VM instances.'
                     type: boolean
                   reservationAffinity:
-                    description: Immutable. The reservation affinity configuration
-                      for the node pool.
+                    description: The optional reservation affinity. Setting this field
+                      will apply the specified [Zonal Compute Reservation](https://cloud.google.com/compute/docs/instances/reserving-zonal-resources)
+                      to this node pool.
                     properties:
                       consumeReservationType:
-                        description: Immutable. Corresponds to the type of reservation
-                          consumption.
+                        description: Corresponds to the type of reservation consumption.
                         type: string
                       key:
-                        description: Immutable. The label key of a reservation resource.
+                        description: Corresponds to the label key of a reservation
+                          resource. To target a SPECIFIC_RESERVATION by name, specify
+                          "compute.googleapis.com/reservation-name" as the key and
+                          specify the name of your reservation as its value.
                         type: string
                       values:
-                        description: Immutable. The label values of the reservation
-                          resource.
+                        description: Corresponds to the label value(s) of reservation
+                          resource(s).
                         items:
                           type: string
                         type: array
-                    required:
-                    - consumeReservationType
                     type: object
                   resourceLabels:
                     additionalProperties:
                       type: string
-                    description: The GCE resource labels (a map of key/value pairs)
-                      to be applied to the node pool.
+                    description: The resource labels for the node pool to use to annotate
+                      any related Google Compute Engine resources.
                     type: object
                   sandboxConfig:
-                    description: Immutable. Sandbox configuration for this node.
+                    description: Sandbox configuration for this node.
                     properties:
                       sandboxType:
                         description: Type of the sandbox to use for the node (e.g.
-                          'gvisor').
+                          'gvisor')
                         type: string
-                    required:
-                    - sandboxType
                     type: object
                   serviceAccountRef:
                     oneOf:
@@ -636,18 +854,23 @@ spec:
                         - external
                       required:
                       - name
+                      - kind
                     - not:
                         anyOf:
                         - required:
                           - name
                         - required:
                           - namespace
+                        - required:
+                          - kind
                       required:
                       - external
                     properties:
                       external:
-                        description: 'Allowed value: The `email` field of an `IAMServiceAccount`
-                          resource.'
+                        description: The external name of the referenced resource
+                        type: string
+                      kind:
+                        description: Kind of the referent.
                         type: string
                       name:
                         description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
@@ -657,56 +880,63 @@ spec:
                         type: string
                     type: object
                   shieldedInstanceConfig:
-                    description: Immutable. Shielded Instance options.
+                    description: Shielded Instance options.
                     properties:
                       enableIntegrityMonitoring:
-                        description: Immutable. Defines whether the instance has integrity
-                          monitoring enabled.
+                        description: |-
+                          Defines whether the instance has integrity monitoring enabled.
+
+                           Enables monitoring and attestation of the boot integrity of the instance.
+                           The attestation is performed against the integrity policy baseline. This
+                           baseline is initially derived from the implicitly trusted boot image when
+                           the instance is created.
                         type: boolean
                       enableSecureBoot:
-                        description: Immutable. Defines whether the instance has Secure
-                          Boot enabled.
+                        description: |-
+                          Defines whether the instance has Secure Boot enabled.
+
+                           Secure Boot helps ensure that the system only runs authentic software by
+                           verifying the digital signature of all boot components, and halting the
+                           boot process if signature verification fails.
                         type: boolean
                     type: object
                   soleTenantConfig:
-                    description: Immutable. Node affinity options for sole tenant
-                      node pools.
+                    description: Parameters for node pools to be backed by shared
+                      sole tenant node groups.
                     properties:
                       nodeAffinity:
                         description: Immutable. .
                         items:
                           properties:
                             key:
-                              description: Immutable. .
+                              description: Key for NodeAffinity.
                               type: string
                             operator:
-                              description: Immutable. .
+                              description: Operator for NodeAffinity.
                               type: string
                             values:
-                              description: Immutable. .
+                              description: Values for NodeAffinity.
                               items:
                                 type: string
                               type: array
-                          required:
-                          - key
-                          - operator
-                          - values
                           type: object
                         type: array
                     required:
                     - nodeAffinity
                     type: object
                   spot:
-                    description: Immutable. Whether the nodes are created as spot
-                      VM instances.
+                    description: Spot flag for enabling Spot VM, which is a rebrand
+                      of the existing preemptible flag.
                     type: boolean
                   tags:
-                    description: The list of instance tags applied to all nodes.
+                    description: The list of instance tags applied to all nodes. Tags
+                      are used to identify valid sources or targets for network firewalls
+                      and are specified by the client during cluster or node pool
+                      creation. Each tag within the list must comply with RFC1035.
                     items:
                       type: string
                     type: array
                   taint:
-                    description: List of Kubernetes taints to be applied to each node.
                     items:
                       properties:
                         effect:
@@ -718,10 +948,6 @@ spec:
                         value:
                           description: Value for taint.
                           type: string
-                      required:
-                      - effect
-                      - key
-                      - value
                       type: object
                     type: array
                   workloadMetadataConfig:
@@ -729,12 +955,11 @@ spec:
                     properties:
                       mode:
                         description: Mode is the configuration for how to expose metadata
-                          to workloads running on the node.
+                          to workloads running on the node pool.
                         type: string
                       nodeMetadata:
-                        description: DEPRECATED. Deprecated in favor of mode. NodeMetadata
-                          is the configuration for how to expose metadata to the workloads
-                          running on the node.
+                        description: NodeMetadata is the configuration for how to
+                          expose metadata to the workloads running on the node.
                         type: string
                     type: object
                 type: object
@@ -742,6 +967,7 @@ spec:
                 description: The number of nodes per instance group. This field can
                   be used to update the number of nodes per instance group but should
                   not be used alongside autoscaling.
+                format: int64
                 type: integer
               nodeLocations:
                 description: The list of zones in which the node pool's nodes should
@@ -765,18 +991,23 @@ spec:
                         - external
                       required:
                       - name
+                      - kind
                     - not:
                         anyOf:
                         - required:
                           - name
                         - required:
                           - namespace
+                        - required:
+                          - kind
                       required:
                       - external
                     properties:
                       external:
-                        description: 'Allowed value: The `selfLink` field of a `ComputeResourcePolicy`
-                          resource.'
+                        description: The external name of the referenced resource
+                        type: string
+                      kind:
+                        description: Kind of the referent.
                         type: string
                       name:
                         description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names'
@@ -786,19 +1017,19 @@ spec:
                         type: string
                     type: object
                   tpuTopology:
-                    description: TPU placement topology for pod slice node pool. https://cloud.google.com/tpu/docs/types-topologies#tpu_topologies.
+                    description: TPU placement topology for pod slice node pool. https://cloud.google.com/tpu/docs/types-topologies#tpu_topologies
                     type: string
                   type:
-                    description: Type defines the type of placement policy.
+                    description: The type of placement.
                     type: string
-                required:
-                - type
                 type: object
               resourceID:
-                description: Immutable. Optional. The name of the resource. Used for
-                  creation and acquisition. When unset, the value of `metadata.name`
-                  is used as the default.
+                description: Immutable. The ContainerNodePool name. If not given,
+                  the metadata.name will be used.
                 type: string
+                x-kubernetes-validations:
+                - message: ResourceID field is immutable
+                  rule: self == oldSelf
               upgradeSettings:
                 description: Specify node upgrade settings to change how many nodes
                   GKE attempts to upgrade at once. The number of nodes upgraded simultaneously
@@ -806,44 +1037,43 @@ spec:
                   of nodes upgraded simultaneously is limited to 20.
                 properties:
                   blueGreenSettings:
-                    description: Settings for BlueGreen node pool upgrade.
+                    description: Settings for blue-green upgrade strategy.
                     properties:
                       nodePoolSoakDuration:
                         description: Time needed after draining entire blue pool.
                           After this period, blue pool will be cleaned up.
                         type: string
                       standardRolloutPolicy:
-                        description: Standard rollout policy is the default policy
-                          for blue-green.
+                        description: Standard policy for the blue-green upgrade.
                         properties:
                           batchNodeCount:
                             description: Number of blue nodes to drain in a batch.
+                            format: int32
                             type: integer
                           batchPercentage:
                             description: Percentage of the blue pool nodes to drain
-                              in a batch.
+                              in a batch. The range of this field should be (0.0,
+                              1.0].
                             type: number
                           batchSoakDuration:
                             description: Soak time after each batch gets drained.
+                              Default to zero.
                             type: string
                         type: object
-                    required:
-                    - standardRolloutPolicy
                     type: object
                   maxSurge:
-                    description: The number of additional nodes that can be added
-                      to the node pool during an upgrade. Increasing max_surge raises
-                      the number of nodes that can be upgraded simultaneously. Can
-                      be set to 0 or greater.
+                    description: The maximum number of nodes that can be created beyond
+                      the current size of the node pool during the upgrade process.
+                    format: int32
                     type: integer
                   maxUnavailable:
-                    description: The number of nodes that can be simultaneously unavailable
-                      during an upgrade. Increasing max_unavailable raises the number
-                      of nodes that can be upgraded in parallel. Can be set to 0 or
-                      greater.
+                    description: The maximum number of nodes that can be simultaneously
+                      unavailable during the upgrade process. A node is considered
+                      available if its status is Ready.
+                    format: int32
                     type: integer
                   strategy:
-                    description: Update strategy for the given nodepool.
+                    description: Update strategy of the node pool.
                     type: string
                 type: object
               version:
@@ -853,10 +1083,12 @@ spec:
             - location
             type: object
           status:
+            description: ContainerNodePoolStatus defines the config connector machine
+              state of ContainerNodePool
             properties:
               conditions:
-                description: Conditions represent the latest available observation
-                  of the resource's current state.
+                description: Conditions represent the latest available observations
+                  of the object's current state.
                 items:
                   properties:
                     lastTransitionTime:
@@ -898,9 +1130,11 @@ spec:
                   If this is equal to metadata.generation, then that means that the
                   current reported status reflects the most recent desired state of
                   the resource.
+                format: int64
                 type: integer
               observedState:
-                description: The observed state of the underlying GCP resource.
+                description: ObservedState is the state of the resource as most recently
+                  observed in GCP.
                 properties:
                   version:
                     type: string
@@ -915,9 +1149,3 @@ spec:
     storage: true
     subresources:
       status: {}
-status:
-  acceptedNames:
-    kind: ""
-    plural: ""
-  conditions: []
-  storedVersions: []

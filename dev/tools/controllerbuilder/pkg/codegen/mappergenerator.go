@@ -134,6 +134,8 @@ func (v *MapperGenerator) visitMessage(msg protoreflect.MessageDescriptor) {
 		protoGoPackage = "github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/generated/mockgcp/cloud/networkconnectivity/v1"
 	case "cloud.google.com/go/bigquery/apiv2/bigquerypb":
 		protoGoPackage = "github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/generated/mockgcp/cloud/bigquery/v2"
+	case "cloud.google.com/go/container/apiv1beta1/containerpb":
+		protoGoPackage = "github.com/GoogleCloudPlatform/k8s-config-connector/mockgcp/generated/mockgcp/container/v1beta1"
 	}
 
 	for _, goType := range goTypes {
@@ -177,8 +179,8 @@ func (v *MapperGenerator) GenerateMappers() error {
 		}
 		out := v.getOutputFile(k)
 		out.packageName = lastGoComponent(goPackage)
-		
-		 {
+
+		{
 			pbPackage := pair.ProtoGoPackage
 			krmPackage := pair.KRMType.GoPackage
 
